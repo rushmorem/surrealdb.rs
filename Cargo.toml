@@ -1,0 +1,24 @@
+[package]
+name = "surrealdb-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Tobie Morgan Hitchcock <tobie@surrealdb.com>"]
+description = "SurrealDB official client"
+repository = "https://github.com/surrealdb/surrealdb.rs"
+homepage = "https://surrealdb.com"
+documentation = "https://docs.rs/surrealdb-rs"
+keywords = ["database", "database-client"]
+categories = ["database", "asynchronous"]
+license = "Apache-2.0"
+
+[features]
+default = ["ws"]
+http = []
+ws = []
+
+[dependencies]
+async-trait = "0.1.57"
+serde = { version = "1.0.145", features = ["derive"] }
+surrealdb = { git = "https://github.com/rushmorem/surrealdb", branch = "suppress-warnings", default-features = false }
+tokio = { version = "1.21.2", features = ["net", "macros", "rt-multi-thread", "io-std", "sync"] }
+uuid = { version = "1.1.2", features = ["v4", "serde"] }
