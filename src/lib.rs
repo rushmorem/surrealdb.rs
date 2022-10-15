@@ -1,221 +1,343 @@
-#![allow(dead_code, unused_variables, unused_imports)]
+#![deny(missing_debug_implementations)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(test, deny(warnings))]
 
-mod authenticate;
-mod begin;
-mod cancel;
-mod change;
-mod commit;
-mod content;
-mod create;
-mod delete;
+//! This SurrealDB library enables simple and advanced querying of a remote database from
+//! server-side code. All connections to SurrealDB are made over WebSockets by default (HTTP is
+//! also supported), and automatically reconnect when the connection is terminated.
+//!
+//! # Examples
+//!
+//! ```no_run
+//! use serde::{Serialize, Deserialize};
+//! use serde_json::json;
+//! use std::borrow::Cow;
+//! use surrealdb_rs::{Result, Surreal};
+//! use surrealdb_rs::param::Root;
+//! use surrealdb_rs::protocol::Ws;
+//! use ulid::Ulid;
+//!
+//! #[derive(Serialize, Deserialize)]
+//! struct Name {
+//!     first: Cow<'static, str>,
+//!     last: Cow<'static, str>,
+//! }
+//!
+//! #[derive(Serialize, Deserialize)]
+//! struct Person {
+//!     title: Cow<'static, str>,
+//!     name: Name,
+//!     marketing: bool,
+//!     identifier: Ulid,
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<()> {
+//!     let client = Surreal::connect::<Ws>("127.0.0.1:8000").await?;
+//!
+//!     // Signin as a namespace, database, or root user
+//!     client.signin(Root {
+//!         username: "root",
+//!         password: "root",
+//!     }).await?;
+//!
+//!     // Select a specific namespace / database
+//!     client.use_ns("test").use_db("test").await?;
+//!
+//!     // Create a new person with a random ID
+//!     let created: Person = client.create("person")
+//!         .content(Person {
+//!             title: "Founder & CEO".into(),
+//!             name: Name {
+//!                 first: "Tobie".into(),
+//!                 last: "Morgan Hitchcock".into(),
+//!             },
+//!             marketing: true,
+//!             identifier: Ulid::new(),
+//!         })
+//!         .await?;
+//!
+//!     // Create a new person with a specific ID
+//!     let created: Person = client.create(("person", "jaime"))
+//!         .content(Person {
+//!             title: "Founder & COO".into(),
+//!             name: Name {
+//!                 first: "Jaime".into(),
+//!                 last: "Morgan Hitchcock".into(),
+//!             },
+//!             marketing: false,
+//!             identifier: Ulid::new(),
+//!         })
+//!         .await?;
+//!
+//!     // Update a person record with a specific ID
+//!     let updated: Person = client.update(("person", "jaime"))
+//!         .merge(json!({"marketing": true}))
+//!         .await?;
+//!
+//!     // Select all people records
+//!     let people: Vec<Person> = client.select("person").await?;
+//!
+//!     // Perform a custom advanced query
+//!     let groups = client
+//!         .query("SELECT marketing, count() FROM type::table($tb) GROUP BY marketing")
+//!         .bind("tb", "person")
+//!         .await?;
+//!
+//!     Ok(())
+//! }
+//! ```
+
+#[cfg(not(any(feature = "http", feature = "ws")))]
+compile_error!("Either feature \"http\" or \"ws\" must be enabled for this crate.");
+
 mod err;
-mod export;
-mod health;
-mod import;
-mod info;
-mod invalidate;
-mod kill;
-mod live;
-mod modify;
-mod patches;
-mod query;
-mod select;
-mod set;
-mod signin;
-mod signup;
-mod update;
-mod use_db;
-mod use_ns;
-mod version;
+
+pub mod method;
 
 #[cfg(any(feature = "http", feature = "ws"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "http", feature = "ws"))))]
 pub mod net;
 pub mod param;
 #[cfg(any(feature = "http", feature = "ws"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "http", feature = "ws"))))]
 pub mod protocol;
 
-pub use authenticate::Authenticate;
-pub use begin::{Begin, Transaction};
-pub use cancel::Cancel;
-pub use change::Change;
-pub use commit::Commit;
-pub use content::Content;
-pub use create::Create;
-pub use delete::Delete;
-pub use err::{Error, ErrorKind};
-pub use export::Export;
-pub use health::Health;
-pub use import::Import;
-pub use info::Info;
-pub use invalidate::Invalidate;
-pub use kill::Kill;
-pub use live::Live;
-pub use modify::Modify;
-pub use patches::Patches;
-pub use query::Query;
-pub use select::Select;
-pub use set::Set;
-pub use signin::Signin;
-pub use signup::Signup;
-pub use update::Update;
-pub use use_db::UseDb;
-pub use use_ns::UseNs;
-pub use version::Version;
+pub use err::Error;
+pub use err::ErrorKind;
 
+use crate::param::ServerAddrs;
+use crate::param::ToServerAddrs;
 use async_trait::async_trait;
-use serde::Serialize;
+use flume::Receiver;
+use flume::Sender;
+use futures::future::BoxFuture;
+use method::Method;
+use once_cell::sync::OnceCell;
+use semver::VersionReq;
+use serde::de::DeserializeOwned;
+use std::fmt::Debug;
+use std::future::IntoFuture;
 use std::marker::PhantomData;
-use std::mem;
-use surrealdb::sql::{Object, Value};
-use uuid::Uuid;
+#[cfg(feature = "ws")]
+use std::sync::atomic::AtomicI64;
+#[cfg(feature = "ws")]
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
+use surrealdb::sql::Value;
 
+/// Result type returned by the client
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub struct Record;
-pub struct Table;
+const SUPPORTED_VERSIONS: &str = ">=1.0.0-beta.8+20221030.c12a1cc, <2.0.0";
 
+/// Connection trait implemented by supported protocols
 #[async_trait]
-pub trait Connection: Send + Sync + 'static {
-    type Output;
-    async fn connect(address: param::ServerAddrs) -> Result<Self::Output>;
-    async fn send(&mut self, msg: Value) -> Result<Option<Value>>;
-    async fn recv(&mut self) -> Result<Option<Value>>;
-    async fn close(&mut self) -> Result<()>;
-}
+pub trait Connection: Sized + Send + Sync + 'static {
+    type Request: Send + Debug;
+    type Response: Send + Debug;
 
-pub struct Connect<A, C> {
-    address: A,
-    response: PhantomData<C>,
-}
+    fn new(method: Method) -> Self;
 
-pub struct Surreal<C: Connection> {
-    conn: Option<C>,
-}
+    async fn connect(address: ServerAddrs, capacity: usize) -> Result<Surreal<Self>>;
 
-impl<C: Connection> Surreal<C> {
-    pub fn connect<A>(address: A) -> Connect<A, C> {
-        Connect {
-            address,
-            response: PhantomData,
-        }
-    }
-
-    pub fn transaction(self) -> Begin<C> {
-        todo!()
-    }
-
-    pub fn info(&mut self) -> Info<C> {
-        todo!()
-    }
-
-    pub fn use_ns(&mut self, ns: &str) -> UseNs<C> {
-        todo!()
-    }
-
-    pub fn use_db(&mut self, db: &str) -> UseDb<C> {
-        todo!()
-    }
-
-    pub fn signup<R>(&mut self, credentials: impl param::Credentials<Output = R>) -> Signup<C, R> {
-        todo!()
-    }
-
-    pub fn signin<R>(&mut self, credentials: impl param::Credentials<Output = R>) -> Signin<C, R> {
-        todo!()
-    }
-
-    pub fn authenticate(&mut self, token: param::Jwt) -> Authenticate<C> {
-        todo!()
-    }
-
-    pub fn invalidate(&mut self) -> Invalidate<C> {
-        todo!()
-    }
-
-    pub fn set(&mut self, key: &str, value: impl Serialize) -> Set<C> {
-        todo!()
-    }
-
-    pub fn query<'a, R>(&mut self, query: impl Into<param::Query<'a>>) -> Query<C, R> {
-        todo!()
-    }
-
-    pub fn select<T, R>(&mut self, resource: impl param::Resource<Output = T>) -> Select<C, T, R> {
-        todo!()
-    }
-
-    pub fn create<R>(&mut self, resource: impl param::Resource) -> Create<C, R> {
-        todo!()
-    }
-
-    pub fn update<T, R>(&mut self, resource: impl param::Resource<Output = T>) -> Update<C, T, R> {
-        todo!()
-    }
-
-    pub fn change<T, R>(&mut self, resource: impl param::Resource<Output = T>) -> Change<C, T, R> {
-        todo!()
-    }
-
-    pub fn modify<T, R>(&mut self, resource: impl param::Resource<Output = T>) -> Modify<C, T, R> {
-        todo!()
-    }
-
-    pub fn delete(&mut self, resource: impl param::Resource) -> Delete<C> {
-        todo!()
-    }
-
-    pub fn import<'a>(
+    async fn send(
         &mut self,
-        ns: &str,
-        db: &str,
-        statements: impl Into<param::Query<'a>>,
-    ) -> Import<C> {
-        todo!()
+        router: &Router<Self>,
+        param: param::Param,
+    ) -> Result<Receiver<Self::Response>>;
+
+    async fn recv<R>(&mut self, receiver: Receiver<Self::Response>) -> Result<R>
+    where
+        R: DeserializeOwned;
+
+    async fn recv_query(
+        &mut self,
+        receiver: Receiver<Self::Response>,
+    ) -> Result<Vec<Result<Vec<Value>>>>;
+
+    async fn execute<R>(&mut self, router: &Router<Self>, param: param::Param) -> Result<R>
+    where
+        R: DeserializeOwned,
+    {
+        let rx = self.send(router, param).await?;
+        self.recv(rx).await
     }
 
-    pub async fn close(mut self) -> Result<()> {
-        if let Some(conn) = &mut self.conn {
-            conn.close().await?;
-        }
-        Ok(())
-    }
-}
-
-#[doc(hidden)] // hide these for now until the server re-enables live queries
-#[cfg(feature = "ws")]
-impl Surreal<net::WsClient> {
-    pub fn kill(&mut self, query_id: Uuid) -> Kill<net::WsClient> {
-        todo!()
-    }
-
-    pub fn live(&mut self, table_name: &str) -> Live<net::WsClient> {
-        todo!()
-    }
-}
-
-#[cfg(feature = "http")]
-impl Surreal<net::HttpClient> {
-    pub fn version(&mut self) -> Version<net::HttpClient> {
-        todo!()
-    }
-
-    pub fn health(&mut self) -> Health<net::HttpClient> {
-        todo!()
-    }
-
-    pub fn export(&mut self, ns: &str, db: &str) -> Export<net::HttpClient> {
-        todo!()
+    async fn execute_query(
+        &mut self,
+        router: &Router<Self>,
+        param: param::Param,
+    ) -> Result<Vec<Result<Vec<Value>>>> {
+        let rx = self.send(router, param).await?;
+        self.recv_query(rx).await
     }
 }
 
-impl<C: Connection> Drop for Surreal<C> {
+/// Connect future created by `Surreal::connect`
+#[derive(Debug)]
+pub struct Connect<'r, C: Connection, R> {
+    router: Option<&'r OnceCell<Arc<Router<C>>>>,
+    address: Result<ServerAddrs>,
+    capacity: usize,
+    client: PhantomData<C>,
+    response_type: PhantomData<R>,
+}
+
+impl<C, R> Connect<'_, C, R>
+where
+    C: Connection,
+{
+    pub const fn with_capacity(mut self, capacity: usize) -> Self {
+        self.capacity = capacity;
+        self
+    }
+}
+
+impl<'r, Client> IntoFuture for Connect<'r, Client, Surreal<Client>>
+where
+    Client: Connection,
+{
+    type Output = Result<Surreal<Client>>;
+    type IntoFuture = BoxFuture<'r, Result<Surreal<Client>>>;
+
+    fn into_future(self) -> Self::IntoFuture {
+        Box::pin(async move {
+            let client = Client::connect(self.address?, self.capacity).await?;
+            client.check_server_version();
+            Ok(client)
+        })
+    }
+}
+
+impl<'r, Client> IntoFuture for Connect<'r, Client, ()>
+where
+    Client: Connection,
+{
+    type Output = Result<()>;
+    type IntoFuture = BoxFuture<'r, Result<()>>;
+
+    fn into_future(self) -> Self::IntoFuture {
+        Box::pin(async move {
+            match self.router {
+                Some(router) => {
+                    let option = Client::connect(self.address?, self.capacity)
+                        .await?
+                        .router
+                        .into_inner();
+                    match option {
+                        Some(client) => {
+                            let _ = router.set(client);
+                        }
+                        None => unreachable!(),
+                    }
+                }
+                None => unreachable!(),
+            }
+            Ok(())
+        })
+    }
+}
+
+#[derive(Debug)]
+struct Route<A, R> {
+    request: A,
+    response: Sender<R>,
+}
+
+/// Message router
+#[derive(Debug)]
+pub struct Router<C: Connection> {
+    conn: PhantomData<C>,
+    sender: Sender<Option<Route<C::Request, C::Response>>>,
+    #[cfg(feature = "ws")]
+    last_id: AtomicI64,
+}
+
+impl<C> Router<C>
+where
+    C: Connection,
+{
+    #[cfg(feature = "ws")]
+    fn next_id(&self) -> i64 {
+        self.last_id.fetch_add(1, Ordering::SeqCst)
+    }
+}
+
+impl<C> Drop for Router<C>
+where
+    C: Connection,
+{
     fn drop(&mut self) {
-        let client = mem::replace(self, Surreal { conn: None });
+        let _ = self.sender.send(None);
+    }
+}
+
+/// SurrealDB client
+#[derive(Debug)]
+pub struct Surreal<C: Connection> {
+    router: OnceCell<Arc<Router<C>>>,
+}
+
+impl<C> Surreal<C>
+where
+    C: Connection,
+{
+    fn check_server_version(&self) {
+        let conn = self.clone();
         tokio::spawn(async move {
-            if let Err(_error) = client.close().await {
-                // TODO log the reason
-                tracing::warn!("failed to close database connection");
+            // invalid version requirements should be caught during development
+            let req = VersionReq::parse(SUPPORTED_VERSIONS).expect("valid version");
+            match conn.version().await {
+                Ok(version) => {
+                    if !req.matches(&version) {
+                        tracing::warn!("server version `{version}` does not match the range supported by the client `{SUPPORTED_VERSIONS}`");
+                    }
+                }
+                Err(error) => {
+                    tracing::trace!("failed to lookup the server version; {error:?}");
+                }
             }
         });
     }
+}
+
+impl<C> Clone for Surreal<C>
+where
+    C: Connection,
+{
+    fn clone(&self) -> Self {
+        Self {
+            router: self.router.clone(),
+        }
+    }
+}
+
+/// Exposes a `connect` method for use with `Surreal::new`
+pub trait StaticClient<C>
+where
+    C: Connection,
+{
+    fn connect<P>(&self, address: impl ToServerAddrs<P, Client = C>) -> Connect<C, ()>;
+}
+
+trait ExtractRouter<C>
+where
+    C: Connection,
+{
+    fn extract(&self) -> Result<&Router<C>>;
+}
+
+impl<C> ExtractRouter<C> for OnceCell<Arc<Router<C>>>
+where
+    C: Connection,
+{
+    fn extract(&self) -> Result<&Router<C>> {
+        let router = self.get().ok_or_else(connection_uninitialised)?;
+        Ok(router)
+    }
+}
+
+fn connection_uninitialised() -> Error {
+    ErrorKind::ConnectionUninitialized.with_message("connection uninitialized")
 }
