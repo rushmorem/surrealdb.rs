@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use surrealdb_rs::param::Root;
 use surrealdb_rs::protocol::Ws;
 use surrealdb_rs::{Result, Surreal};
@@ -10,6 +10,11 @@ const USER: &str = "user";
 struct User {
     id: String,
     name: String,
+}
+
+#[derive(Debug, Serialize)]
+struct Params<'a> {
+    table: &'a str,
 }
 
 #[tokio::main]
@@ -24,9 +29,10 @@ async fn main() -> Result<()> {
 
     conn.use_ns("namespace").use_db("database").await?;
 
-    let _user: Option<User> = conn.select((USER, "doe")).await?;
-
-    let _users: Vec<User> = conn.select(USER).await?;
+    let _users: Vec<User> = conn
+        .query("SELECT * FROM $table")
+        .bind(Params { table: USER })
+        .await?;
 
     Ok(())
 }

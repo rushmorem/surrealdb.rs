@@ -28,6 +28,7 @@ Temporary Items
 **/*.rs.bk
 *.db
 Cargo.lock
+*.sw?
 
 # -----------------------------------
 # Folders
