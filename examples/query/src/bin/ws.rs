@@ -16,19 +16,23 @@ struct User {
 async fn main() -> surrealdb_rs::Result<()> {
     tracing_subscriber::fmt::init();
 
-    let client = Surreal::connect::<Ws>("localhost:8000").await?;
+    let db = Surreal::connect::<Ws>("localhost:8000").await?;
 
-    client
-        .signin(Root {
-            username: "root",
-            password: "root",
-        })
-        .await?;
+    db.signin(Root {
+        username: "root",
+        password: "root",
+    })
+    .await?;
 
-    client.use_ns("namespace").use_db("database").await?;
+    db.use_ns("namespace").use_db("database").await?;
 
-    let mut results = client
-        .query("CREATE user SET name = $name, company = $company")
+    #[rustfmt::skip]
+    let mut results = db
+        .query("
+            CREATE user
+            SET name = $name,
+                company = $company
+        ")
         .bind("name", "John Doe")
         .bind("company", "ACME Corporation")
         .await?;

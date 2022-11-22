@@ -4,7 +4,7 @@ use surrealdb_rs::StaticClient;
 use surrealdb_rs::Surreal;
 use tokio::sync::mpsc;
 
-static CLIENT: Surreal<WsClient> = Surreal::new();
+static DB: Surreal<WsClient> = Surreal::new();
 
 const NUM: usize = 100_000;
 
@@ -12,20 +12,23 @@ const NUM: usize = 100_000;
 async fn main() -> surrealdb_rs::Result<()> {
     tracing_subscriber::fmt::init();
 
-    CLIENT
-        .connect::<Ws>("localhost:8000")
+    DB.connect::<Ws>("localhost:8000")
         .with_capacity(NUM)
         .await?;
 
-    CLIENT.use_ns("namespace").use_db("database").await?;
+    DB.use_ns("namespace").use_db("database").await?;
 
     let (tx, mut rx) = mpsc::channel::<()>(1);
 
     for idx in 0..NUM {
         let sender = tx.clone();
         tokio::spawn(async move {
-            let mut result = CLIENT
-                .query("SELECT * FROM $idx")
+            #[rustfmt::skip]
+            let mut result = DB
+                .query("
+                    SELECT *
+                    FROM $idx
+                ")
                 .bind("idx", idx)
                 .await
                 .unwrap();

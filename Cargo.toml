@@ -16,13 +16,28 @@ resolver = "2"
 
 [features]
 default = ["ws", "rustls"]
+
+# Network protocols
 http = ["dep:reqwest", "dep:tokio-util", "dep:indexmap"]
 ws = ["dep:tokio-tungstenite", "dep:tokio-stream", "dep:indexmap", "tokio/time"]
+
+# Embedded database backends
+indxdb = ["surrealdb/kv-indxdb"]
+mem = ["surrealdb/kv-mem", "surrealdb/parallel"]
+tikv = ["surrealdb/kv-tikv", "surrealdb/parallel"]
+rocksdb = ["surrealdb/kv-rocksdb", "surrealdb/parallel"]
+fdb = ["surrealdb/kv-fdb-7_1", "surrealdb/parallel"]
+
+# Extra embedded DB features
+request-methods = ["surrealdb/http"]
+scripting = ["surrealdb/scripting"]
+
+# TLS backends
 rustls = ["dep:rustls", "reqwest?/rustls-tls", "tokio-tungstenite?/__rustls-tls"]
 native-tls = ["dep:native-tls", "reqwest?/native-tls", "tokio-tungstenite?/native-tls"]
 
 [package.metadata.docs.rs]
-all-features = true
+features = ["ws", "http", "mem", "rustls"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
@@ -40,19 +55,19 @@ serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.88"
 serde_pack = { version = "1.1.1", package = "rmp-serde" }
 surrealdb = { git = "https://github.com/rushmorem/surrealdb", branch = "suppress-warnings", default-features = false }
+wasm-bindgen-futures = "0.4.33"
 tokio-stream = { version = "0.1.11", optional = true }
 tokio-util = { version = "0.7.4", optional = true, features = ["compat"] }
 tracing = "0.1.37"
 url = "2.3.1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1.21.2", default-features = false, features = ["fs", "rt-multi-thread"] }
-tokio-tungstenite = { version = "0.17.2", optional = true }
+tokio = { version = "1.21.2", default-features = false, features = ["io-util", "fs", "rt-multi-thread"] }
+tokio-tungstenite = { version = "=0.16.1", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 tokio = { version = "1.21.2", default-features = false, features = ["rt"] }
 pharos = "0.5.3"
-wasm-bindgen-futures = "0.4.33"
 ws_stream_wasm = "0.7.3"
 
 [dev-dependencies]

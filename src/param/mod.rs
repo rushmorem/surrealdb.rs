@@ -13,10 +13,17 @@ use serde::Serialize;
 use serde_json::json;
 use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
-#[cfg(feature = "http")]
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(
+    feature = "http",
+    feature = "mem",
+    feature = "tikv",
+    feature = "rocksdb",
+    feature = "fdb",
+))]
 use std::path::PathBuf;
 use surrealdb::sql;
+use surrealdb::sql::Thing;
 use surrealdb::sql::Value;
 
 pub use credentials::*;
@@ -26,7 +33,7 @@ pub use resource::*;
 pub use server_addrs::*;
 
 /// Record ID
-pub type RecordId = sql::Thing;
+pub type RecordId = Thing;
 
 type UnitOp<'a> = InnerOp<'a, ()>;
 
@@ -130,28 +137,66 @@ impl PatchOp {
 
 /// Holds the parameters given to the caller
 #[derive(Debug)]
+#[allow(dead_code)] // used by the embedded and remote connections
 pub struct Param {
-    pub(crate) query: Vec<sql::Value>,
-    #[cfg(feature = "http")]
+    pub(crate) query: Option<(sql::Query, BTreeMap<String, Value>)>,
+    pub(crate) other: Vec<Value>,
     #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(any(
+        feature = "http",
+        feature = "mem",
+        feature = "tikv",
+        feature = "rocksdb",
+        feature = "fdb",
+    ))]
     pub(crate) file: Option<PathBuf>,
 }
 
 impl Param {
-    pub(crate) fn new(query: Vec<sql::Value>) -> Self {
+    pub(crate) fn new(other: Vec<Value>) -> Self {
         Self {
-            query,
-            #[cfg(feature = "http")]
+            other,
+            query: None,
             #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(any(
+                feature = "http",
+                feature = "mem",
+                feature = "tikv",
+                feature = "rocksdb",
+                feature = "fdb",
+            ))]
             file: None,
         }
     }
 
-    #[cfg(feature = "http")]
+    pub(crate) fn query(query: sql::Query, bindings: BTreeMap<String, Value>) -> Self {
+        Self {
+            query: Some((query, bindings)),
+            other: Vec::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(any(
+                feature = "http",
+                feature = "mem",
+                feature = "tikv",
+                feature = "rocksdb",
+                feature = "fdb",
+            ))]
+            file: None,
+        }
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(any(
+        feature = "http",
+        feature = "mem",
+        feature = "tikv",
+        feature = "rocksdb",
+        feature = "fdb",
+    ))]
     pub(crate) fn file(file: PathBuf) -> Self {
         Self {
-            query: Vec::new(),
+            query: None,
+            other: Vec::new(),
             file: Some(file),
         }
     }
@@ -161,13 +206,13 @@ impl Param {
 #[derive(Debug)]
 pub enum DbResponse {
     /// The response sent for the `query` method
-    Query(Vec<Result<Vec<sql::Value>>>),
+    Query(Vec<Result<Vec<Value>>>),
     /// The response sent for any method except `query`
-    Other(sql::Value),
+    Other(Value),
 }
 
 /// Deserializes a value `T` from `SurrealDB` `Value`
-pub fn from_value<T>(value: &sql::Value) -> Result<T>
+pub fn from_value<T>(value: &Value) -> Result<T>
 where
     T: DeserializeOwned,
 {
@@ -176,9 +221,9 @@ where
     Ok(response)
 }
 
-pub(crate) fn from_json(json: JsonValue) -> sql::Value {
+pub(crate) fn from_json(json: JsonValue) -> Value {
     match json {
-        JsonValue::Null => sql::Value::None,
+        JsonValue::Null => Value::None,
         JsonValue::Bool(boolean) => boolean.into(),
         JsonValue::Number(number) => match (number.as_u64(), number.as_i64(), number.as_f64()) {
             (Some(number), _, _) => number.into(),
