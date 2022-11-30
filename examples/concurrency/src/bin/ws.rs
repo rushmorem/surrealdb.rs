@@ -27,7 +27,7 @@ async fn main() -> surrealdb_rs::Result<()> {
                     SELECT *
                     FROM $idx
                 ")
-                .bind("idx", idx)
+                .bind(("idx", idx))
                 .await
                 .unwrap();
 

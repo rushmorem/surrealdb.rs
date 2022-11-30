@@ -250,7 +250,13 @@ async fn query() {
 async fn query_binds() {
 	let db = Surreal::connect::<Http>(DB_ENDPOINT).await.unwrap();
 	db.use_ns(NS).use_db(Ulid::new().to_string()).await.unwrap();
-	db.query("CREATE user:john SET name = $name").bind("name", "John Doe").await.unwrap();
+	db.query("CREATE user:john SET name = $name").bind(("name", "John Doe")).await.unwrap();
+	db.query("CREATE user SET name = $name")
+		.bind(Record {
+			name: "John Doe",
+		})
+		.await
+		.unwrap();
 }
 
 #[tokio::test]

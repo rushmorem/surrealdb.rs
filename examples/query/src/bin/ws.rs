@@ -1,9 +1,10 @@
 use serde::Deserialize;
+use serde::Serialize;
 use surrealdb_rs::param::Root;
 use surrealdb_rs::protocol::Ws;
 use surrealdb_rs::Surreal;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[allow(dead_code)]
 struct User {
 	id: String,
@@ -32,8 +33,11 @@ async fn main() -> surrealdb_rs::Result<()> {
             SET name = $name,
                 company = $company
         ")
-        .bind("name", "John Doe")
-        .bind("company", "ACME Corporation")
+		.bind(User {
+			id: "john".to_owned(),
+			name: "John Doe".to_owned(),
+			company: "ACME Corporation".to_owned(),
+		})
         .await?;
 
 	// print the created user:

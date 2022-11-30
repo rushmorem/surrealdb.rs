@@ -25,8 +25,8 @@ async fn main() -> surrealdb_rs::Result<()> {
             SET name = $name,
                 company = $company
         ")
-        .bind("name", "John Doe")
-        .bind("company", "ACME Corporation")
+        .bind(("name", "John Doe"))
+        .bind(("company", "ACME Corporation"))
         .await?;
 
 	// print the created user:
