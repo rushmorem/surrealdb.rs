@@ -1,4 +1,4 @@
-#![cfg(feature = "ws")]
+#![cfg(feature = "protocol-ws")]
 #![cfg(not(target_arch = "wasm32"))]
 
 mod types;

@@ -377,7 +377,7 @@ fn router(
 								continue 'reconnect;
 							}
 						}
-						#[cfg(feature = "ws")]
+						#[cfg(feature = "protocol-ws")]
 						for (key, value) in &vars {
 							let mut request = BTreeMap::new();
 							request.insert("method".to_owned(), Method::Set.as_str().into());

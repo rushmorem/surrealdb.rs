@@ -112,12 +112,12 @@ pub mod method;
 	)))
 )]
 pub mod embedded;
-#[cfg(any(feature = "http", feature = "ws"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "http", feature = "ws"))))]
+#[cfg(any(feature = "protocol-http", feature = "protocol-ws"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "protocol-http", feature = "protocol-ws"))))]
 pub mod net;
 pub mod param;
-#[cfg(any(feature = "http", feature = "ws"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "http", feature = "ws"))))]
+#[cfg(any(feature = "protocol-http", feature = "protocol-ws"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "protocol-http", feature = "protocol-ws"))))]
 pub mod protocol;
 #[cfg(any(
 	feature = "mem",
@@ -157,9 +157,9 @@ use std::future::IntoFuture;
 use std::marker::PhantomData;
 use std::mem;
 use std::pin::Pin;
-#[cfg(feature = "ws")]
+#[cfg(feature = "protocol-ws")]
 use std::sync::atomic::AtomicI64;
-#[cfg(feature = "ws")]
+#[cfg(feature = "protocol-ws")]
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use surrealdb::sql::statements::CreateStatement;
@@ -347,7 +347,7 @@ struct Route<A, R> {
 pub struct Router<C: Connection> {
 	conn: PhantomData<C>,
 	sender: Sender<Option<Route<C::Request, C::Response>>>,
-	#[cfg(feature = "ws")]
+	#[cfg(feature = "protocol-ws")]
 	last_id: AtomicI64,
 }
 
@@ -355,7 +355,7 @@ impl<C> Router<C>
 where
 	C: Connection,
 {
-	#[cfg(feature = "ws")]
+	#[cfg(feature = "protocol-ws")]
 	fn next_id(&self) -> i64 {
 		self.last_id.fetch_add(1, Ordering::SeqCst)
 	}

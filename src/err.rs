@@ -1,4 +1,4 @@
-#[cfg(feature = "ws")]
+#[cfg(feature = "protocol-ws")]
 use crate::protocol::ws::Failure;
 use serde::Deserialize;
 use serde::Serialize;
@@ -88,7 +88,7 @@ impl fmt::Display for Error {
 	}
 }
 
-#[cfg(feature = "ws")]
+#[cfg(feature = "protocol-ws")]
 impl From<Failure> for Error {
 	fn from(failure: Failure) -> Self {
 		match failure.code {
@@ -113,8 +113,8 @@ impl From<serde_pack::encode::Error> for Error {
 	}
 }
 
-#[cfg(all(feature = "ws", not(target_arch = "wasm32")))]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "ws", not(target_arch = "wasm32")))))]
+#[cfg(all(feature = "protocol-ws", not(target_arch = "wasm32")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "protocol-ws", not(target_arch = "wasm32")))))]
 impl From<tokio_tungstenite::tungstenite::Error> for Error {
 	fn from(error: tokio_tungstenite::tungstenite::Error) -> Self {
 		ErrorKind::Socket.with_context(error)
@@ -157,48 +157,48 @@ impl From<std::io::Error> for Error {
 	}
 }
 
-#[cfg(feature = "http")]
-#[cfg_attr(docsrs, doc(cfg(feature = "http")))]
+#[cfg(feature = "protocol-http")]
+#[cfg_attr(docsrs, doc(cfg(feature = "protocol-http")))]
 impl From<reqwest::Error> for Error {
 	fn from(error: reqwest::Error) -> Self {
 		ErrorKind::Socket.with_context(error)
 	}
 }
 
-#[cfg(feature = "http")]
-#[cfg_attr(docsrs, doc(cfg(feature = "http")))]
+#[cfg(feature = "protocol-http")]
+#[cfg_attr(docsrs, doc(cfg(feature = "protocol-http")))]
 impl From<serde_json::Error> for Error {
 	fn from(error: serde_json::Error) -> Self {
 		ErrorKind::Socket.with_context(error)
 	}
 }
 
-#[cfg(feature = "http")]
-#[cfg_attr(docsrs, doc(cfg(feature = "http")))]
+#[cfg(feature = "protocol-http")]
+#[cfg_attr(docsrs, doc(cfg(feature = "protocol-http")))]
 impl From<reqwest::header::ToStrError> for Error {
 	fn from(error: reqwest::header::ToStrError) -> Self {
 		ErrorKind::ParseError.with_context(error)
 	}
 }
 
-#[cfg(feature = "http")]
-#[cfg_attr(docsrs, doc(cfg(feature = "http")))]
+#[cfg(feature = "protocol-http")]
+#[cfg_attr(docsrs, doc(cfg(feature = "protocol-http")))]
 impl From<reqwest::header::InvalidHeaderValue> for Error {
 	fn from(error: reqwest::header::InvalidHeaderValue) -> Self {
 		ErrorKind::ParseError.with_context(error)
 	}
 }
 
-#[cfg(all(feature = "ws", target_arch = "wasm32"))]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "ws", target_arch = "wasm32"))))]
+#[cfg(all(feature = "protocol-ws", target_arch = "wasm32"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "protocol-ws", target_arch = "wasm32"))))]
 impl From<ws_stream_wasm::WsErr> for Error {
 	fn from(error: ws_stream_wasm::WsErr) -> Self {
 		ErrorKind::Socket.with_context(error)
 	}
 }
 
-#[cfg(all(feature = "ws", target_arch = "wasm32"))]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "ws", target_arch = "wasm32"))))]
+#[cfg(all(feature = "protocol-ws", target_arch = "wasm32"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "protocol-ws", target_arch = "wasm32"))))]
 impl From<pharos::PharErr> for Error {
 	fn from(error: pharos::PharErr) -> Self {
 		ErrorKind::Socket.with_context(error)

@@ -15,11 +15,11 @@ license = "Apache-2.0"
 resolver = "2"
 
 [features]
-default = ["ws", "rustls"]
+default = ["protocol-ws", "rustls"]
 
 # Network protocols
-http = ["dep:reqwest", "dep:tokio-util", "dep:indexmap"]
-ws = ["dep:tokio-tungstenite", "dep:tokio-stream", "dep:indexmap", "tokio/time"]
+protocol-http = ["dep:reqwest", "dep:tokio-util", "dep:indexmap"]
+protocol-ws = ["dep:tokio-tungstenite", "dep:tokio-stream", "dep:indexmap", "tokio/time"]
 
 # Embedded database backends
 indxdb = ["surrealdb/kv-indxdb"]
@@ -29,7 +29,7 @@ rocksdb = ["surrealdb/kv-rocksdb", "surrealdb/parallel"]
 fdb = ["surrealdb/kv-fdb-7_1", "surrealdb/parallel"]
 
 # Extra embedded DB features
-request-methods = ["surrealdb/http"]
+http = ["surrealdb/http"]
 scripting = ["surrealdb/scripting"]
 
 # TLS backends
@@ -37,7 +37,7 @@ rustls = ["dep:rustls", "reqwest?/rustls-tls", "tokio-tungstenite?/__rustls-tls"
 native-tls = ["dep:native-tls", "reqwest?/native-tls", "tokio-tungstenite?/native-tls"]
 
 [package.metadata.docs.rs]
-features = ["ws", "http", "mem", "rustls"]
+features = ["protocol-ws", "protocol-http", "mem", "rustls"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]

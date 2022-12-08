@@ -24,7 +24,7 @@ use serde::de::DeserializeOwned;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
-#[cfg(feature = "ws")]
+#[cfg(feature = "protocol-ws")]
 use std::sync::atomic::AtomicI64;
 use std::sync::Arc;
 use url::Url;
@@ -62,7 +62,7 @@ impl Connection for Client {
 				router: OnceCell::with_value(Arc::new(Router {
 					conn: PhantomData,
 					sender: route_tx,
-					#[cfg(feature = "ws")]
+					#[cfg(feature = "protocol-ws")]
 					last_id: AtomicI64::new(0),
 				})),
 			})

@@ -8,13 +8,25 @@ mod content;
 mod create;
 mod delete;
 #[cfg(all(
-	any(feature = "http", feature = "mem", feature = "tikv", feature = "rocksdb", feature = "fdb",),
+	any(
+		feature = "protocol-http",
+		feature = "mem",
+		feature = "tikv",
+		feature = "rocksdb",
+		feature = "fdb",
+	),
 	not(target_arch = "wasm32")
 ))]
 mod export;
 mod health;
 #[cfg(all(
-	any(feature = "http", feature = "mem", feature = "tikv", feature = "rocksdb", feature = "fdb",),
+	any(
+		feature = "protocol-http",
+		feature = "mem",
+		feature = "tikv",
+		feature = "rocksdb",
+		feature = "fdb",
+	),
 	not(target_arch = "wasm32")
 ))]
 mod import;
@@ -49,14 +61,20 @@ pub use content::Content;
 pub use create::Create;
 pub use delete::Delete;
 #[cfg(all(
-	any(feature = "http", feature = "mem", feature = "tikv", feature = "rocksdb", feature = "fdb",),
+	any(
+		feature = "protocol-http",
+		feature = "mem",
+		feature = "tikv",
+		feature = "rocksdb",
+		feature = "fdb",
+	),
 	not(target_arch = "wasm32")
 ))]
 #[cfg_attr(
 	docsrs,
 	doc(cfg(all(
 		any(
-			feature = "http",
+			feature = "protocol-http",
 			feature = "mem",
 			feature = "tikv",
 			feature = "rocksdb",
@@ -68,14 +86,20 @@ pub use delete::Delete;
 pub use export::Export;
 pub use health::Health;
 #[cfg(all(
-	any(feature = "http", feature = "mem", feature = "tikv", feature = "rocksdb", feature = "fdb",),
+	any(
+		feature = "protocol-http",
+		feature = "mem",
+		feature = "tikv",
+		feature = "rocksdb",
+		feature = "fdb",
+	),
 	not(target_arch = "wasm32")
 ))]
 #[cfg_attr(
 	docsrs,
 	doc(cfg(all(
 		any(
-			feature = "http",
+			feature = "protocol-http",
 			feature = "mem",
 			feature = "tikv",
 			feature = "rocksdb",
@@ -112,9 +136,9 @@ pub use version::Version;
 	feature = "indxdb"
 ))]
 use crate::embedded::Db;
-#[cfg(feature = "http")]
+#[cfg(feature = "protocol-http")]
 use crate::net::HttpClient;
-#[cfg(feature = "ws")]
+#[cfg(feature = "protocol-ws")]
 use crate::net::WsClient;
 use crate::param;
 use crate::param::from_json;
@@ -129,7 +153,13 @@ use serde::Serialize;
 use serde_json::json;
 use std::marker::PhantomData;
 #[cfg(all(
-	any(feature = "http", feature = "mem", feature = "tikv", feature = "rocksdb", feature = "fdb",),
+	any(
+		feature = "protocol-http",
+		feature = "mem",
+		feature = "tikv",
+		feature = "rocksdb",
+		feature = "fdb",
+	),
 	not(target_arch = "wasm32")
 ))]
 use std::path::Path;
@@ -816,14 +846,14 @@ macro_rules! backup_methods {
 	};
 }
 
-#[cfg(feature = "ws")]
-#[cfg_attr(docsrs, doc(cfg(feature = "ws")))]
+#[cfg(feature = "protocol-ws")]
+#[cfg_attr(docsrs, doc(cfg(feature = "protocol-ws")))]
 impl Surreal<WsClient> {
 	auth_methods!(WsClient);
 }
 
-#[cfg(feature = "http")]
-#[cfg_attr(docsrs, doc(cfg(feature = "http")))]
+#[cfg(feature = "protocol-http")]
+#[cfg_attr(docsrs, doc(cfg(feature = "protocol-http")))]
 impl Surreal<HttpClient> {
 	auth_methods!(HttpClient);
 	backup_methods!(HttpClient);

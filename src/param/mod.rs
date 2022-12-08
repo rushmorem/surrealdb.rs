@@ -16,7 +16,7 @@ use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(any(
-	feature = "http",
+	feature = "protocol-http",
 	feature = "mem",
 	feature = "tikv",
 	feature = "rocksdb",
@@ -163,7 +163,7 @@ pub struct Param {
 	pub(crate) other: Vec<Value>,
 	#[cfg(not(target_arch = "wasm32"))]
 	#[cfg(any(
-		feature = "http",
+		feature = "protocol-http",
 		feature = "mem",
 		feature = "tikv",
 		feature = "rocksdb",
@@ -179,7 +179,7 @@ impl Param {
 			query: None,
 			#[cfg(not(target_arch = "wasm32"))]
 			#[cfg(any(
-				feature = "http",
+				feature = "protocol-http",
 				feature = "mem",
 				feature = "tikv",
 				feature = "rocksdb",
@@ -195,7 +195,7 @@ impl Param {
 			other: Vec::new(),
 			#[cfg(not(target_arch = "wasm32"))]
 			#[cfg(any(
-				feature = "http",
+				feature = "protocol-http",
 				feature = "mem",
 				feature = "tikv",
 				feature = "rocksdb",
@@ -207,7 +207,7 @@ impl Param {
 
 	#[cfg(not(target_arch = "wasm32"))]
 	#[cfg(any(
-		feature = "http",
+		feature = "protocol-http",
 		feature = "mem",
 		feature = "tikv",
 		feature = "rocksdb",

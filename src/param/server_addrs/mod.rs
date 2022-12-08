@@ -1,6 +1,6 @@
-#[cfg(feature = "http")]
+#[cfg(feature = "protocol-http")]
 mod http;
-#[cfg(feature = "ws")]
+#[cfg(feature = "protocol-ws")]
 mod ws;
 
 #[cfg(feature = "fdb")]
