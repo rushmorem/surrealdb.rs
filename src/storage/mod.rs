@@ -85,8 +85,8 @@ type DbRoute = Route<(Method, Param), Result<DbResponse>>;
 /// # Ok(())
 /// # }
 /// ```
-#[cfg(feature = "mem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "mem")))]
+#[cfg(feature = "kv-mem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "kv-mem")))]
 #[derive(Debug)]
 pub struct Mem;
 
@@ -120,8 +120,8 @@ pub struct Mem;
 /// # Ok(())
 /// # }
 /// ```
-#[cfg(feature = "rocksdb")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rocksdb")))]
+#[cfg(feature = "kv-rocksdb")]
+#[cfg_attr(docsrs, doc(cfg(feature = "kv-rocksdb")))]
 #[derive(Debug)]
 pub struct File;
 
@@ -155,8 +155,8 @@ pub struct File;
 /// # Ok(())
 /// # }
 /// ```
-#[cfg(feature = "rocksdb")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rocksdb")))]
+#[cfg(feature = "kv-rocksdb")]
+#[cfg_attr(docsrs, doc(cfg(feature = "kv-rocksdb")))]
 #[derive(Debug)]
 pub struct RocksDb;
 
@@ -190,8 +190,8 @@ pub struct RocksDb;
 /// # Ok(())
 /// # }
 /// ```
-#[cfg(feature = "indxdb")]
-#[cfg_attr(docsrs, doc(cfg(feature = "indxdb")))]
+#[cfg(feature = "kv-indxdb")]
+#[cfg_attr(docsrs, doc(cfg(feature = "kv-indxdb")))]
 #[derive(Debug)]
 pub struct IndxDb;
 
@@ -225,8 +225,8 @@ pub struct IndxDb;
 /// # Ok(())
 /// # }
 /// ```
-#[cfg(feature = "tikv")]
-#[cfg_attr(docsrs, doc(cfg(feature = "tikv")))]
+#[cfg(feature = "kv-tikv")]
+#[cfg_attr(docsrs, doc(cfg(feature = "kv-tikv")))]
 #[derive(Debug)]
 pub struct TiKv;
 
@@ -261,8 +261,8 @@ pub struct TiKv;
 /// # Ok(())
 /// # }
 /// ```
-#[cfg(feature = "fdb")]
-#[cfg_attr(docsrs, doc(cfg(feature = "fdb")))]
+#[cfg(feature = "kv-fdb")]
+#[cfg_attr(docsrs, doc(cfg(feature = "kv-fdb")))]
 #[derive(Debug)]
 pub struct FDb;
 

@@ -95,20 +95,20 @@ mod err;
 pub mod method;
 
 #[cfg(any(
-	feature = "mem",
-	feature = "tikv",
-	feature = "rocksdb",
-	feature = "fdb",
-	feature = "indxdb",
+	feature = "kv-mem",
+	feature = "kv-tikv",
+	feature = "kv-rocksdb",
+	feature = "kv-fdb",
+	feature = "kv-indxdb",
 ))]
 #[cfg_attr(
 	docsrs,
 	doc(cfg(any(
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
-		feature = "indxdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
+		feature = "kv-indxdb",
 	)))
 )]
 pub mod embedded;
@@ -120,20 +120,20 @@ pub mod param;
 #[cfg_attr(docsrs, doc(cfg(any(feature = "protocol-http", feature = "protocol-ws"))))]
 pub mod protocol;
 #[cfg(any(
-	feature = "mem",
-	feature = "tikv",
-	feature = "rocksdb",
-	feature = "fdb",
-	feature = "indxdb",
+	feature = "kv-mem",
+	feature = "kv-tikv",
+	feature = "kv-rocksdb",
+	feature = "kv-fdb",
+	feature = "kv-indxdb",
 ))]
 #[cfg_attr(
 	docsrs,
 	doc(cfg(any(
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
-		feature = "indxdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
+		feature = "kv-indxdb",
 	)))
 )]
 pub mod storage;

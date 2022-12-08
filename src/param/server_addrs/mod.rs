@@ -3,15 +3,15 @@ mod http;
 #[cfg(feature = "protocol-ws")]
 mod ws;
 
-#[cfg(feature = "fdb")]
+#[cfg(feature = "kv-fdb")]
 mod fdb;
-#[cfg(feature = "indxdb")]
+#[cfg(feature = "kv-indxdb")]
 mod indxdb;
-#[cfg(feature = "mem")]
+#[cfg(feature = "kv-mem")]
 mod mem;
-#[cfg(feature = "rocksdb")]
+#[cfg(feature = "kv-rocksdb")]
 mod rocksdb;
-#[cfg(feature = "tikv")]
+#[cfg(feature = "kv-tikv")]
 mod tikv;
 
 use crate::Connection;
@@ -35,10 +35,10 @@ pub enum Tls {
 
 /// Enables `strict` server mode
 #[cfg(any(
-	feature = "mem",
-	feature = "tikv",
-	feature = "rocksdb",
-	feature = "fdb",
+	feature = "kv-mem",
+	feature = "kv-tikv",
+	feature = "kv-rocksdb",
+	feature = "kv-fdb",
 	target_arch = "wasm32"
 ))]
 #[derive(Debug)]

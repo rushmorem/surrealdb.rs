@@ -17,10 +17,10 @@ use std::collections::BTreeMap;
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(any(
 	feature = "protocol-http",
-	feature = "mem",
-	feature = "tikv",
-	feature = "rocksdb",
-	feature = "fdb",
+	feature = "kv-mem",
+	feature = "kv-tikv",
+	feature = "kv-rocksdb",
+	feature = "kv-fdb",
 ))]
 use std::path::PathBuf;
 use surrealdb::sql;
@@ -164,10 +164,10 @@ pub struct Param {
 	#[cfg(not(target_arch = "wasm32"))]
 	#[cfg(any(
 		feature = "protocol-http",
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
 	))]
 	pub(crate) file: Option<PathBuf>,
 }
@@ -180,10 +180,10 @@ impl Param {
 			#[cfg(not(target_arch = "wasm32"))]
 			#[cfg(any(
 				feature = "protocol-http",
-				feature = "mem",
-				feature = "tikv",
-				feature = "rocksdb",
-				feature = "fdb",
+				feature = "kv-mem",
+				feature = "kv-tikv",
+				feature = "kv-rocksdb",
+				feature = "kv-fdb",
 			))]
 			file: None,
 		}
@@ -196,10 +196,10 @@ impl Param {
 			#[cfg(not(target_arch = "wasm32"))]
 			#[cfg(any(
 				feature = "protocol-http",
-				feature = "mem",
-				feature = "tikv",
-				feature = "rocksdb",
-				feature = "fdb",
+				feature = "kv-mem",
+				feature = "kv-tikv",
+				feature = "kv-rocksdb",
+				feature = "kv-fdb",
 			))]
 			file: None,
 		}
@@ -208,10 +208,10 @@ impl Param {
 	#[cfg(not(target_arch = "wasm32"))]
 	#[cfg(any(
 		feature = "protocol-http",
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
 	))]
 	pub(crate) fn file(file: PathBuf) -> Self {
 		Self {

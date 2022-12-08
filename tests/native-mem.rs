@@ -1,4 +1,4 @@
-#![cfg(feature = "mem")]
+#![cfg(feature = "kv-mem")]
 #![cfg(not(target_arch = "wasm32"))]
 
 mod types;
@@ -42,7 +42,7 @@ async fn query() {
 async fn query_binds() {
 	let db = Surreal::connect::<Mem>(()).await.unwrap();
 	db.use_ns(NS).use_db(Ulid::new().to_string()).await.unwrap();
-	db.query("CREATE user:john SET name = $name").bind("name", "John Doe").await.unwrap();
+	db.query("CREATE user:john SET name = $name").bind(("name", "John Doe")).await.unwrap();
 }
 
 #[tokio::test]

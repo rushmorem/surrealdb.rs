@@ -39,7 +39,7 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://install.surrealdb.com | sh -s -- --nightly
           (&>/dev/null $HOME/.surrealdb/surreal start --log trace --user root --pass root memory &)
-          cargo test --features protocol-ws,protocol-http,mem
+          cargo test --features protocol-ws,protocol-http,kv-mem
           cd examples; for example in *; do cd $example; echo "Checking ${example} example"; cargo check; cd -; done
 
   lint:
@@ -73,13 +73,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --features protocol-ws,protocol-http,mem
+          args: --features protocol-ws,protocol-http,kv-mem
 
       - name: Run Wasm cargo check
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --features protocol-ws,protocol-http,mem --target wasm32-unknown-unknown
+          args: --features protocol-ws,protocol-http,kv-mem --target wasm32-unknown-unknown
 
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1

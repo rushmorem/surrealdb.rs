@@ -22,11 +22,11 @@ protocol-http = ["dep:reqwest", "dep:tokio-util", "dep:indexmap"]
 protocol-ws = ["dep:tokio-tungstenite", "dep:tokio-stream", "dep:indexmap", "tokio/time"]
 
 # Embedded database backends
-indxdb = ["surrealdb/kv-indxdb"]
-mem = ["surrealdb/kv-mem", "surrealdb/parallel"]
-tikv = ["surrealdb/kv-tikv", "surrealdb/parallel"]
-rocksdb = ["surrealdb/kv-rocksdb", "surrealdb/parallel"]
-fdb = ["surrealdb/kv-fdb-7_1", "surrealdb/parallel"]
+kv-indxdb = ["surrealdb/kv-indxdb"]
+kv-mem = ["surrealdb/kv-mem", "surrealdb/parallel"]
+kv-tikv = ["surrealdb/kv-tikv", "surrealdb/parallel"]
+kv-rocksdb = ["surrealdb/kv-rocksdb", "surrealdb/parallel"]
+kv-fdb = ["surrealdb/kv-fdb-7_1", "surrealdb/parallel"]
 
 # Extra embedded DB features
 http = ["surrealdb/http"]
@@ -37,7 +37,7 @@ rustls = ["dep:rustls", "reqwest?/rustls-tls", "tokio-tungstenite?/__rustls-tls"
 native-tls = ["dep:native-tls", "reqwest?/native-tls", "tokio-tungstenite?/native-tls"]
 
 [package.metadata.docs.rs]
-features = ["protocol-ws", "protocol-http", "mem", "rustls"]
+features = ["protocol-ws", "protocol-http", "kv-mem", "rustls"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]

@@ -10,10 +10,10 @@ mod delete;
 #[cfg(all(
 	any(
 		feature = "protocol-http",
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
 	),
 	not(target_arch = "wasm32")
 ))]
@@ -22,10 +22,10 @@ mod health;
 #[cfg(all(
 	any(
 		feature = "protocol-http",
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
 	),
 	not(target_arch = "wasm32")
 ))]
@@ -63,10 +63,10 @@ pub use delete::Delete;
 #[cfg(all(
 	any(
 		feature = "protocol-http",
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
 	),
 	not(target_arch = "wasm32")
 ))]
@@ -75,10 +75,10 @@ pub use delete::Delete;
 	doc(cfg(all(
 		any(
 			feature = "protocol-http",
-			feature = "mem",
-			feature = "tikv",
-			feature = "rocksdb",
-			feature = "fdb",
+			feature = "kv-mem",
+			feature = "kv-tikv",
+			feature = "kv-rocksdb",
+			feature = "kv-fdb",
 		),
 		not(target_arch = "wasm32")
 	)))
@@ -88,10 +88,10 @@ pub use health::Health;
 #[cfg(all(
 	any(
 		feature = "protocol-http",
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
 	),
 	not(target_arch = "wasm32")
 ))]
@@ -100,10 +100,10 @@ pub use health::Health;
 	doc(cfg(all(
 		any(
 			feature = "protocol-http",
-			feature = "mem",
-			feature = "tikv",
-			feature = "rocksdb",
-			feature = "fdb",
+			feature = "kv-mem",
+			feature = "kv-tikv",
+			feature = "kv-rocksdb",
+			feature = "kv-fdb",
 		),
 		not(target_arch = "wasm32")
 	)))
@@ -129,11 +129,11 @@ pub use use_ns::UseNsDb;
 pub use version::Version;
 
 #[cfg(any(
-	feature = "mem",
-	feature = "tikv",
-	feature = "rocksdb",
-	feature = "fdb",
-	feature = "indxdb"
+	feature = "kv-mem",
+	feature = "kv-tikv",
+	feature = "kv-rocksdb",
+	feature = "kv-fdb",
+	feature = "kv-indxdb"
 ))]
 use crate::embedded::Db;
 #[cfg(feature = "protocol-http")]
@@ -155,10 +155,10 @@ use std::marker::PhantomData;
 #[cfg(all(
 	any(
 		feature = "protocol-http",
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
 	),
 	not(target_arch = "wasm32")
 ))]
@@ -860,20 +860,20 @@ impl Surreal<HttpClient> {
 }
 
 #[cfg(any(
-	feature = "mem",
-	feature = "tikv",
-	feature = "rocksdb",
-	feature = "fdb",
-	feature = "indxdb"
+	feature = "kv-mem",
+	feature = "kv-tikv",
+	feature = "kv-rocksdb",
+	feature = "kv-fdb",
+	feature = "kv-indxdb"
 ))]
 #[cfg_attr(
 	docsrs,
 	doc(cfg(any(
-		feature = "mem",
-		feature = "tikv",
-		feature = "rocksdb",
-		feature = "fdb",
-		feature = "indxdb"
+		feature = "kv-mem",
+		feature = "kv-tikv",
+		feature = "kv-rocksdb",
+		feature = "kv-fdb",
+		feature = "kv-indxdb"
 	)))
 )]
 impl Surreal<Db> {
